@@ -46,17 +46,38 @@ def user_input_features():
     user_input['floor']=user_input['floor'].astype(object)
 
     otodom_clean = pd.read_csv('app/otodom_data_cleaned.csv')
-    otodom_clean = otodom_clean.drop(columns=['price'])
-    otodom_clean = pd.concat([otodom_clean, user_input], axis=0)
-    otodom_clean = pd.get_dummies(otodom_clean, drop_first=True)
+    otodom_pred= otodom_clean.drop(columns=['price'])
+    otodom_pred = pd.concat([otodom_pred, user_input], axis=0)
+    otodom_pred = pd.get_dummies(otodom_pred, drop_first=True)
 
     column_names = model.feature_names_in_
-    features = otodom_clean[column_names]
+    features = otodom_pred[column_names]
     features = pd.DataFrame(features.iloc[-1]).T
+
     
-    return  features
-df = user_input_features()
-df = pd.DataFrame(df.iloc[-1]).T
-st.write(df)
-prediction = model.predict(df)
-st.write(f'Prognozowana cena mieszkania: {prediction[0]:.0f} zł')
+    return  features, user_data, otodom_clean
+
+
+df, user_data, otodom = user_input_features()
+df_pred = pd.DataFrame(df.iloc[-1]).T
+prediction = model.predict(df_pred)
+user_data = pd.DataFrame(user_data, index=[0])
+st.table(user_data.assign(hack='').set_index('hack'))
+st.subheader(f'Przewidywana cena twojego mieszkania: {prediction[0]:.0f} zł')
+cena_lokalizacja = otodom.groupby('localization').price.mean().reset_index()
+user_cena_lokalizacja = cena_lokalizacja[cena_lokalizacja['localization']==user_data['localization'][0]]
+st.subheader(f'Średnia cena w tej lokalizacji to: {user_cena_lokalizacja["price"].values[0]:.0f} zł')
+import matplotlib.pyplot as plt
+
+st.write('Histogram cen mieszkań w tej lokalizacji')
+fig, ax = plt.subplots()
+import plotly.express as px
+
+fig = px.histogram(otodom[otodom['localization']==user_data['localization'][0]], x='price', nbins=10)
+fig.update_layout(
+    xaxis_title='Cena',
+    yaxis_title='Liczba mieszkań',
+    title='Histogram cen mieszkań w tej lokalizacji'
+)
+
+st.plotly_chart(fig)
