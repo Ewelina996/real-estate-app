@@ -5,6 +5,5 @@ numpy
 folium
 streamlit_folium
 plotly
-sklearn
 seaborn
 scikit-learn
