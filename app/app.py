@@ -7,6 +7,7 @@ from streamlit_folium import folium_static
 from functions.maps import MapCreator
 from functions.user_features import user_input_features
 import plotly.express as px
+import sklearn
 
 # Load the model
 model = pickle.load(open('model.pkl', 'rb'))
