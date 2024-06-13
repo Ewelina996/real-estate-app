@@ -1,7 +1,11 @@
+import folium
 import streamlit as st
-import pickle
+import geopandas as gpd
+import pickle 
 import pandas as pd
-
+from streamlit_folium import folium_static
+from functions.maps import MapCreator
+from functions.user_features import user_input_features
 
 # Load the model
 model = pickle.load(open('model.pkl', 'rb'))
@@ -11,53 +15,6 @@ st.write("""
 """)
 
 st.sidebar.header('Wprowadź dane')
-
-def user_input_features():
-    lokalizacja = st.sidebar.selectbox('Lokalizacja', [' Krowodrza', ' Prądnik Biały', ' Łagiewniki-Borek Fałęcki',
-       ' Podgórze Duchackie', ' Stare Miasto', ' Bieżanów-Prokocim',
-       ' Podgórze', ' Prądnik Czerwony', ' Dębniki', ' Nowa Huta',
-       ' Zwierzyniec', ' Bieńczyce', ' Bronowice', ' Osiedle Oficerskie',
-       ' Czyżyny', ' ul. Wiślicka', ' Grzegórzki', ' ul. Lea',
-       ' Mistrzejowice', ' Rakowice', ' Wzgórza Krzesławickie',
-       ' Wieliczka', ' Krowodrza Górka', ' Zielonki',
-       ' ul. Radzikowskiego', ' Swoszowice'], key='localization')
-    powierzchnia = st.sidebar.number_input('Powierzchnia', value=60)
-    liczba_pokoi = st.sidebar.number_input('Liczba pokoi', value=2)
-    status_mieszkania = st.sidebar.selectbox('Status mieszkania', ['do wykończenia', 'do zamieszkania', 'do remontu'], key='status')
-    piętro = st.sidebar.number_input('Piętro', value=1)
-    rodzaj_ogrzewania  = st.sidebar.selectbox('Rodzaj ogrzewania', ['miejskie', 'gazowe', 'elektryczne', 'inne', 'kotłownia'], key='heating_type')
-    balkon = st.sidebar.selectbox('Balkon', ['tak', 'nie'], key='balkon')
-    ogródek = st.sidebar.selectbox('Ogródek', ['tak', 'nie'], key='ogródek')
-    taras = st.sidebar.selectbox('Taras', ['tak', 'nie'], key='taras')
-
-    user_data = {'localization': lokalizacja,
-            'rooms': liczba_pokoi,
-            'area': powierzchnia,
-            'status': status_mieszkania,
-            'floor': piętro,
-            'heating_type': rodzaj_ogrzewania,
-            'balkon': balkon,
-            'ogródek': ogródek,
-            'taras': taras}
-    user_input = pd.DataFrame(user_data, index=[0])
-    user_input['balkon'] = user_input['balkon'].map({'tak': 1, 'nie': 0})
-    user_input['ogródek'] = user_input['ogródek'].map({'tak': 1, 'nie': 0})
-    user_input['taras'] = user_input['taras'].map({'tak': 1, 'nie': 0})
-    user_input['floor']=user_input['floor'].astype(object)
-
-    otodom_clean = pd.read_csv('app/otodom_data_cleaned.csv')
-    otodom_pred= otodom_clean.drop(columns=['price'])
-    otodom_pred = pd.concat([otodom_pred, user_input], axis=0)
-    otodom_pred = pd.get_dummies(otodom_pred, drop_first=True)
-
-    column_names = model.feature_names_in_
-    features = otodom_pred[column_names]
-    features = pd.DataFrame(features.iloc[-1]).T
-
-    
-    return  features, user_data, otodom_clean
-
-
 df, user_data, otodom = user_input_features()
 df_pred = pd.DataFrame(df.iloc[-1]).T
 prediction = model.predict(df_pred)
@@ -67,17 +24,9 @@ st.subheader(f'Przewidywana cena twojego mieszkania: {prediction[0]:.0f} zł')
 cena_lokalizacja = otodom.groupby('localization').price.mean().reset_index()
 user_cena_lokalizacja = cena_lokalizacja[cena_lokalizacja['localization']==user_data['localization'][0]]
 st.subheader(f'Średnia cena w tej lokalizacji to: {user_cena_lokalizacja["price"].values[0]:.0f} zł')
-import matplotlib.pyplot as plt
 
-st.write('Histogram cen mieszkań w tej lokalizacji')
-fig, ax = plt.subplots()
-import plotly.express as px
-
-fig = px.histogram(otodom[otodom['localization']==user_data['localization'][0]], x='price', nbins=10)
-fig.update_layout(
-    xaxis_title='Cena',
-    yaxis_title='Liczba mieszkań',
-    title='Histogram cen mieszkań w tej lokalizacji'
-)
-
-st.plotly_chart(fig)
+map = MapCreator(otodom, gpd.read_file('krakow-dzielnice.geojson'))
+map.preprocess_data()
+map.create_map()
+m = map.display_map()
+folium_static(m)
