@@ -45,7 +45,7 @@ def user_input_features():
     user_input['taras'] = user_input['taras'].map({'tak': 1, 'nie': 0})
     user_input['floor']=user_input['floor'].astype(object)
 
-    otodom_clean = pd.read_csv('app/otodom_data_cleaned.csv')
+    otodom_clean = pd.read_csv('otodom_data_cleaned.csv')
     otodom_clean = otodom_clean.drop(columns=['price'])
     otodom_clean = pd.concat([otodom_clean, user_input], axis=0)
     otodom_clean = pd.get_dummies(otodom_clean, drop_first=True)
@@ -60,3 +60,39 @@ df = pd.DataFrame(df.iloc[-1]).T
 st.write(df)
 prediction = model.predict(df)
 st.write(f'Prognozowana cena mieszkania: {prediction[0]:.0f} zł')
+
+#######################
+# Dashboard Main Panel
+col = st.columns((1.5, 4.5, 5), gap='medium')
+
+with col[0]:
+    st.markdown('#### Coś')
+
+with col[1]:
+    st.markdown('#### Mapka')
+
+with col[2]:
+    st.markdown('#### Dzielnice/Średnia powierzchnia mieszkań w m2')
+
+    data = pd.read_csv('cleaned_data.csv')
+    df_average_area = data.groupby('localization')['area'].mean().sort_values(ascending=False)
+
+    df_average_area = df_average_area.reset_index()
+    df_average_area['area'] = df_average_area['area'].round(0)
+
+    st.dataframe(df_average_area,
+                 column_order=("localization", "area"),
+                 hide_index=True,
+                 width=None,
+                 column_config={
+                    "localization": st.column_config.TextColumn(
+                        "Localization",
+                    ),
+                    "area": st.column_config.ProgressColumn(
+                        "Average area [m2]",
+                        format="%f",
+                        min_value=0,
+                        max_value=max(df_average_area['area']),
+                     )}
+                 )
+    
