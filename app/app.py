@@ -37,7 +37,7 @@ df_average_area = data.groupby('localization')['area'].mean().sort_values(ascend
 df_average_area = df_average_area.reset_index()
 df_average_area['area'] = df_average_area['area'].round(0)
 
-df_average_price = data.groupby('localization')['price'].mean()
+offers_per_district = data['localization'].value_counts()
 
 #######################
 # Dashboard Main Panel
