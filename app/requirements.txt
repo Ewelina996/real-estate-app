@@ -7,3 +7,4 @@ streamlit_folium
 plotly
 sklearn
 seaborn
+scikit-learn
