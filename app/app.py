@@ -36,25 +36,29 @@ df_average_area = data.groupby('localization')['area'].mean().sort_values(ascend
 
 df_average_area = df_average_area.reset_index()
 df_average_area['area'] = df_average_area['area'].round(0)
+
+offers_per_district = data['localization'].value_counts()
+
 #######################
 # Dashboard Main Panel
 col = st.columns((1.5, 4.5, 1.5), gap='small')
 
 with col[0]:
-    st.markdown('#### Coś')
-    st.dataframe(df_average_area,
-                 column_order=("localization", "area"),
+    st.markdown('#### Liczba ofert w danej dzielnicy')
+    df_offers_per_district = pd.DataFrame({'Localization': offers_per_district.index, 'Number of Offers': offers_per_district.values})
+    st.dataframe(df_offers_per_district,
+                 column_order=("Localization", "Number of Offers"),
                  hide_index=True,
                  width=None,
                  column_config={
-                    "localization": st.column_config.TextColumn(
+                    "Localization": st.column_config.TextColumn(
                         "Localization",
                     ),
-                    "area": st.column_config.ProgressColumn(
-                        "Average area [m2]",
-                        format="%f",
+                    "Number of Offers": st.column_config.NumberColumn(
+                        "Number of Offers",
+                        format="%d",
                         min_value=0,
-                        max_value=max(df_average_area['area']),
+                        max_value=max(df_offers_per_district['Number of Offers']),
                      )}
                  )
     
@@ -84,6 +88,7 @@ with col[2]:
                         max_value=max(df_average_area['area']),
                      )}
                  )
+    
 size_counts = data.groupby('localization')['size'].value_counts(normalize=True).unstack().fillna(0)
 size_counts = size_counts.reset_index().melt(id_vars='localization', value_name='Percentage')
 
