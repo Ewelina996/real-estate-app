@@ -9,6 +9,8 @@ from functions.user_features import user_input_features
 import plotly.express as px
 import sklearn
 
+st.set_page_config(layout="wide")
+
 # Load the model
 model = pickle.load(open('model.pkl', 'rb'))
 
