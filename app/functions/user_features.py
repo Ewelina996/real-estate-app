@@ -38,7 +38,7 @@ def user_input_features():
     user_input['taras'] = user_input['taras'].map({'tak': 1, 'nie': 0})
     user_input['floor']=user_input['floor'].astype(object)
 
-    otodom_clean = pd.read_csv('app/cleaned_data.csv')
+    otodom_clean = pd.read_csv('cleaned_data.csv')
     otodom_pred= otodom_clean.drop(columns=['price'])
     otodom_pred = pd.concat([otodom_pred, user_input], axis=0)
     otodom_pred = pd.get_dummies(otodom_pred, drop_first=True)

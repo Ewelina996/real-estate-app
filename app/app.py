@@ -29,11 +29,11 @@ cena_lokalizacja = otodom.groupby('localization').price.mean().reset_index()
 user_cena_lokalizacja = cena_lokalizacja[cena_lokalizacja['localization']==user_data['localization'][0]]
 st.subheader(f'Średnia cena w tej lokalizacji to: {user_cena_lokalizacja["price"].values[0]:.0f} zł')
 
-map = MapCreator(otodom, gpd.read_file('app/krakow-dzielnice.geojson'))
+map = MapCreator(otodom, gpd.read_file('krakow-dzielnice.geojson'))
 map.preprocess_data()
 map.create_map()
 m = map.display_map()
-data = pd.read_csv('app/cleaned_data.csv')
+data = pd.read_csv('cleaned_data.csv')
 df_average_area = data.groupby('localization')['area'].mean().sort_values(ascending=False)
 
 df_average_area = df_average_area.reset_index()
